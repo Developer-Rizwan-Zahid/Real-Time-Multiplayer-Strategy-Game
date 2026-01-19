@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:15
+    container_name: game-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: rizwanzahid
+      POSTGRES_DB: GameDb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./Backend/GameBackend
+      dockerfile: Dockerfile
+    container_name: game-backend
+    ports:
+      - "5159:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=GameDb;Username=postgres;Password=rizwanzahid
+      - AiServiceUrl=http://ai-service:8000
+    depends_on:
+      - db
+      - ai-service
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: game-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: game-ai-service
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres_data:
